@@ -1,3 +1,23 @@
+# LiveKit Android UI
+
+# General
+
+This is a sample Android app that demonstrates how to use the LiveKit Android SDK to build a video
+viewer application.
+
+# Features
+
+- Get a token from the server via REST API
+- Connect to LiveKit server
+- Join a room
+- Select a track from the room
+
+# Screenshots
+
+![Screenshot](doc/Android_screenshot.jpg)
+
+# LiveKit Android SDK
+
 in [libs.versions.toml](gradle/libs.versions.toml)
 
 ```toml
