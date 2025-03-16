@@ -4,6 +4,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import android.widget.ArrayAdapter
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -22,29 +23,58 @@ import io.recursio.livekitandroid.model.Token
 import kotlinx.coroutines.launch
 
 import android.Manifest
+import android.view.View
+import android.widget.AdapterView
+import io.recursio.livekitandroid.model.RoomTrack
+import livekit.org.webrtc.RendererCommon
+import io.livekit.android.room.track.LocalVideoTrack
 
 class MainActivity : AppCompatActivity() {
     lateinit var room: Room
     private lateinit var binding: ActivityMainBinding // name of the activity!
+    private lateinit var roomsAdapter: ArrayAdapter<String>
+    private lateinit var rooms: MutableList<RoomTrack>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         binding = ActivityMainBinding.inflate(layoutInflater)
         room = LiveKit.create(applicationContext)
+        requestNeededPermissions {}
 
         binding.btnGetToken.setOnClickListener {
-            var tc = TokenClient(
-                "http://brick.recursio.io:3030/token",
-                "room1",
-                "user-identity-1",
-                { token ->
-                    token?.let {
-                        val tkn = Gson().fromJson(it, Token::class.java)
-                        updateUI(tkn)
-                    }
-                })
-            tc.fetchToken().start()
+                var tc = TokenClient(
+                    "http://brick.recursio.io:3030/token",
+                    "room1",
+                    "android-identity-1",
+                    { token ->
+                        token?.let {
+                            val tkn = Gson().fromJson(it, Token::class.java)
+                            updateUI(tkn)
+                        }
+                    })
+                tc.fetchToken().start()
+            }
+
+        rooms = mutableListOf()
+
+        // link the adapter to the spinner dropdown
+        roomsAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item)
+        roomsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.dropdown.adapter = roomsAdapter
+        binding.dropdown.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View,
+                position: Int,
+                id: Long
+            ) {
+                onDropDownItemSelected(position)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Handle case where no item is selected if needed
+            }
         }
 
         val view = binding.root
@@ -58,8 +88,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateUI(token: Token) {
         runOnUiThread {
-            //binding.txvHelloWorld.text = token.token
             Toast.makeText(this, "Token fetched!", Toast.LENGTH_SHORT).show()
+
             room.initVideoRenderer(binding.renderer)
             lifecycleScope.launch {
                 room.connect("ws://brick.recursio.io:7880", token.token)
@@ -73,18 +103,31 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 }
-                //val localParticipant = room.localParticipant
-                //localParticipant.setCameraEnabled(true)
+                // to publish phone camera:
+                // val localParticipant = room.localParticipant
+                // localParticipant.name = "android-identity-1"
+                // localParticipant.setCameraEnabled(true)
             }
         }
+    }
+
+    private fun onDropDownItemSelected(position: Int) {
+        val roomTrack = rooms[position]
+        Toast.makeText(this, roomTrack.name, Toast.LENGTH_SHORT).show()
+        for (roomTrack in rooms) {
+            var track = roomTrack.track as VideoTrack
+            track.removeRenderer(binding.renderer)
+        }
+        var track = roomTrack.track as VideoTrack
+        track.addRenderer(binding.renderer)
     }
 
     private fun onTrackSubscribed(event: RoomEvent.TrackSubscribed) {
         Log.i("MainActivity", "Track subscribed")
         val track = event.track
-        if (track is VideoTrack && track.name == "room-tiny-0") {
-
-            track.addRenderer(binding.renderer)
+        if (track is VideoTrack) {
+            this.rooms.add(RoomTrack(track.name, track))
+            this.roomsAdapter.add(track.name)
         } else
             Log.i("MainActivity", "Ignoring track: ${track.name}")
 

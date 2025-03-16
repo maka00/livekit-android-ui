@@ -17,30 +17,29 @@
         android:id="@+id/btnGetToken"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Get Token"
+        android:text="Connect"
         />
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
    <Spinner
-    android:id="@+id/dropdown"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_marginStart="16dp" />
+        android:id="@+id/dropdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+       android:layout_gravity="end"
+       />
 </LinearLayout>
     <io.livekit.android.renderer.SurfaceViewRenderer
         android:id="@+id/renderer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@id/txvHelloWorld"
         android:layout_below="@id/header"
+        android:layout_alignParentBottom="true"
         android:paddingBottom="100dp"
         />
 
-    <TextView
-        android:id="@+id/txvHelloWorld"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:text="Hello World!"
-        />
+
 
 </RelativeLayout>
